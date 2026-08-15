@@ -1,7 +1,6 @@
 import './App.css'
-import TodoList from './TodoList.jsx'
-import TodoForm from './TodoForm.jsx'
-import inventoryData from './assets/inventory.json';
+import TodoList from './features/TodoList/TodoList.jsx'
+import TodoForm from './features/TodoList/TodoForm.jsx'
 import { useState } from 'react'
 
 function App() {
