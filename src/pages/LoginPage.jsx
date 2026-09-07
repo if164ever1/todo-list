@@ -1,14 +1,28 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
-function Logon() {
-  const { login } = useAuth();
+function LoginPage() {
+  const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [isLoggingOn, setIsLoggingOn] = useState(false);
 
-  const handleSubmit = async (event) => {
+  const intendedLocation = location.state?.from;
+  const from = intendedLocation
+    ? `${intendedLocation.pathname}${intendedLocation.search || ''}${intendedLocation.hash || ''}`
+    : '/todos';
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
+
+  async function handleSubmit(event) {
     event.preventDefault();
     setAuthError('');
     setIsLoggingOn(true);
@@ -16,15 +30,18 @@ function Logon() {
     try {
       const result = await login(email, password);
 
-      if (!result.success) {
-        setAuthError(result.error);
+      if (result.success) {
+        navigate(from, { replace: true });
+        return;
       }
+
+      setAuthError(result.error);
     } catch (error) {
       setAuthError(`Error: ${error.name} | ${error.message}`);
     } finally {
       setIsLoggingOn(false);
     }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -57,4 +74,4 @@ function Logon() {
   );
 }
 
-export default Logon;
+export default LoginPage;
