@@ -1,14 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
-function Logon() {
-  const { login } = useAuth();
+function LoginPage() {
+  const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [isLoggingOn, setIsLoggingOn] = useState(false);
 
-  const handleSubmit = async (event) => {
+  const from = location.state?.from?.pathname || '/todos';
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
+
+  async function handleSubmit(event) {
     event.preventDefault();
     setAuthError('');
     setIsLoggingOn(true);
@@ -24,7 +35,7 @@ function Logon() {
     } finally {
       setIsLoggingOn(false);
     }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -57,4 +68,4 @@ function Logon() {
   );
 }
 
-export default Logon;
+export default LoginPage;
