@@ -11,7 +11,10 @@ function LoginPage() {
   const [authError, setAuthError] = useState('');
   const [isLoggingOn, setIsLoggingOn] = useState(false);
 
-  const from = location.state?.from?.pathname || '/todos';
+  const intendedLocation = location.state?.from;
+  const from = intendedLocation
+    ? `${intendedLocation.pathname}${intendedLocation.search || ''}${intendedLocation.hash || ''}`
+    : '/todos';
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -27,9 +30,12 @@ function LoginPage() {
     try {
       const result = await login(email, password);
 
-      if (!result.success) {
-        setAuthError(result.error);
+      if (result.success) {
+        navigate(from, { replace: true });
+        return;
       }
+
+      setAuthError(result.error);
     } catch (error) {
       setAuthError(`Error: ${error.name} | ${error.message}`);
     } finally {

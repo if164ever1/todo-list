@@ -3,33 +3,29 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 
 function ProfilePage() {
   const { email: userName, token, isAuthenticated } = useAuth();
-  const [statistics, setStatistics] = useState({
+  const [todoStats, setTodoStats] = useState({
     total: 0,
     completed: 0,
     active: 0,
   });
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    async function fetchTodoStatistics() {
+    async function fetchTodoStats() {
       if (!token) return;
 
-      setIsLoading(true);
-      setError('');
-
       try {
-        const params = new URLSearchParams({ limit: 100 });
-        const response = await fetch(`/api/tasks?${params}`, {
+        setLoading(true);
+        setError('');
+
+        const options = {
           method: 'GET',
-          headers: {
-            'X-CSRF-TOKEN': token,
-          },
+          headers: { 'X-CSRF-TOKEN': token },
           credentials: 'include',
-          signal: controller.signal,
-        });
+        };
+
+        const response = await fetch('/api/tasks', options);
 
         if (response.status === 401) {
           throw new Error('Unauthorized');
@@ -39,33 +35,26 @@ function ProfilePage() {
           throw new Error('Failed to fetch todos');
         }
 
-        const data = await response.json();
-        const todos = Array.isArray(data) ? data : data.tasks ?? [];
+        const todos = await response.json();
         const completed = todos.filter((todo) => todo.isCompleted).length;
 
-        setStatistics({
+        setTodoStats({
           total: todos.length,
           completed,
           active: todos.length - completed,
         });
-      } catch (caughtError) {
-        if (caughtError.name !== 'AbortError') {
-          setError(`Error loading statistics: ${caughtError.message}`);
-        }
+      } catch (err) {
+        setError(`Error loading statistics: ${err.message}`);
       } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
+        setLoading(false);
       }
     }
 
-    fetchTodoStatistics();
-
-    return () => controller.abort();
+    fetchTodoStats();
   }, [token]);
 
-  const completionPercentage = statistics.total
-    ? Math.round((statistics.completed / statistics.total) * 100)
+  const completionPercentage = todoStats.total
+    ? Math.round((todoStats.completed / todoStats.total) * 100)
     : 0;
 
   return (
@@ -80,23 +69,26 @@ function ProfilePage() {
 
       <section>
         <h3>Todo Statistics</h3>
-        {isLoading && <p>Loading statistics...</p>}
+        {loading && <p>Loading statistics...</p>}
         {error && <p role="alert">{error}</p>}
-        {!isLoading && !error && (
-          <dl>
-            <dt>Total</dt>
-            <dd>{statistics.total}</dd>
-            <dt>Completed</dt>
-            <dd>{statistics.completed}</dd>
-            <dt>Active</dt>
-            <dd>{statistics.active}</dd>
-            {statistics.total > 0 && (
-              <>
-                <dt>Completion</dt>
-                <dd>{completionPercentage}%</dd>
-              </>
-            )}
-          </dl>
+        {!loading && !error && (
+          <>
+            {todoStats.total === 0 && <p>You do not have any todos yet.</p>}
+            <dl>
+              <dt>Total</dt>
+              <dd>{todoStats.total}</dd>
+              <dt>Completed</dt>
+              <dd>{todoStats.completed}</dd>
+              <dt>Active</dt>
+              <dd>{todoStats.active}</dd>
+              {todoStats.total > 0 && (
+                <>
+                  <dt>Completion</dt>
+                  <dd>{completionPercentage}%</dd>
+                </>
+              )}
+            </dl>
+          </>
         )}
       </section>
     </main>
