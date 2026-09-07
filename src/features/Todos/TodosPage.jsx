@@ -85,7 +85,7 @@ function TodosPage() {
         const isFilterError = Boolean(
           debouncedFilterTerm ||
           sortBy !== 'createdAt' ||
-          sortDirection !== 'desc'
+          sortDirection !== 'asc'
         );
         const message = isFilterError
           ? `Error filtering/sorting todos: ${error.message}`

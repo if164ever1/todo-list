@@ -37,32 +37,28 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    if (!token) {
-      setEmail('');
-      setToken('');
-      return { success: true };
-    }
+    let result = { success: true };
 
     try {
-      const response = await fetch('/api/user/logoff', {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': token,
-        },
-        credentials: 'include',
-      });
+      if (token) {
+        const response = await fetch('/api/user/logoff', {
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': token,
+          },
+          credentials: 'include',
+        });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        return {
-          success: false,
-          error: `Logout failed: ${data?.message || response.statusText}`,
-        };
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          result = {
+            success: false,
+            error: `Logout failed: ${data?.message || response.statusText}`,
+          };
+        }
       }
-
-      return { success: true };
     } catch {
-      return {
+      result = {
         success: false,
         error: 'Network error during logout',
       };
@@ -70,6 +66,8 @@ export function AuthProvider({ children }) {
       setEmail('');
       setToken('');
     }
+
+    return result;
   };
 
   const value = {
